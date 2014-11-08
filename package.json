@@ -1,0 +1,22 @@
+{
+  "name": "flat-scraper-kijiji",
+  "version": "0.1.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "contributors": [
+    "Mathieu Albrespy <mathieu.albrespy@gmail.com>",
+    "Julien Christin <jul.christin@gmail.com>"
+  ],
+  "license": "Proprietary",
+  "dependencies": {
+    "async": "^0.9.0",
+    "cheerio": "^0.17.0",
+    "cron": "^1.0.5",
+    "mongodb": "^1.4.19",
+    "node-logentries": "^0.1.4",
+    "request": "^2.45.0"
+  }
+}
