@@ -164,8 +164,8 @@ async.series([
 		},
 		// Start to scrap.
 		function() {
-			new cron.CronJob("*/30 * * * * *", checkForNewApartment, null, true);
-			new cron.CronJob("*/5 * * * * *", updateLastApartment, null, true);
+			new cron.CronJob("0 */5 * * * *", checkForNewApartment, null, true);
+			new cron.CronJob("0 */1 * * * *", updateLastApartment, null, true);
 		}
 	],
 	function(err) {
