@@ -24,7 +24,7 @@ function scrapApartment(apartment, update) {
 		} else if (response.statusCode == 200) {
 			var $ = cheerio.load(body);
 
-			if ($("div.expired-ad-container").length > 0) {
+			if ($("div.expired-ad-container").length > 0 || $("div.message-container").length > 0) {
 				database.collection("active").remove({
 					"_id": apartment._id
 				}, function(err) {
