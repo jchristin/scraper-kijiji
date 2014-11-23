@@ -17,23 +17,32 @@ if (process.env.NODE_ENV !== "production") {
 	log.err = console.log;
 }
 
+function removeApartment(id) {
+	database.collection("active").remove({
+		"_id": id
+	}, function(err) {
+		if (err) {
+			log.err(err);
+		} else {
+			log.info("Dead apartment: " + id);
+		}
+	});
+}
+
 function scrapApartment(apartment, update) {
-	request(apartment._id, function(error, response, body) {
+	request({
+		url: apartment._id,
+		followRedirect: false
+	}, function(error, response, body) {
 		if (error) {
 			log.err(error);
+		} else if (response.statusCode == 301) {
+			removeApartment(apartment._id);
 		} else if (response.statusCode == 200) {
 			var $ = cheerio.load(body);
 
 			if ($("div.expired-ad-container").length > 0 || $("div.message-container").length > 0) {
-				database.collection("active").remove({
-					"_id": apartment._id
-				}, function(err) {
-					if (err) {
-						log.err(err);
-					} else {
-						log.info("Dead apartment: " + apartment._id);
-					}
-				});
+				removeApartment(apartment._id);
 			} else {
 				var priceString = $("span[itemprop=price] strong").html().replace(/&#xA0;/g, "");
 				apartment.latitude = $("meta[property='og:latitude']").attr("content");
