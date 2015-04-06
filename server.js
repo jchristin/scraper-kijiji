@@ -51,6 +51,9 @@ function scrapApartment(apartment, update) {
 				apartment.price = parseInt(priceString);
 				apartment.last = new Date();
 
+				var roomRegExpResult = /http:\/\/www\.kijiji\.ca\/.+-(\d)-1-2\//.exec(apartment._id);
+				apartment.room = roomRegExpResult ? parseInt(roomRegExpResult[1]) : undefined;
+
 				database.collection("active").update({
 						_id: apartment._id
 					}, apartment, {
