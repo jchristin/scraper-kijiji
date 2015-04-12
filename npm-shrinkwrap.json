@@ -119,6 +119,11 @@
       "from": "cron@>=1.0.5 <2.0.0",
       "resolved": "https://registry.npmjs.org/cron/-/cron-1.0.5.tgz"
     },
+    "moment": {
+      "version": "2.10.2",
+      "from": "moment@*",
+      "resolved": "https://registry.npmjs.org/moment/-/moment-2.10.2.tgz"
+    },
     "mongodb": {
       "version": "1.4.19",
       "from": "mongodb@>=1.4.19 <2.0.0",

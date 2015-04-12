@@ -4,6 +4,7 @@ var async = require("async"),
 	cron = require("cron"),
 	request = require("request"),
 	cheerio = require("cheerio"),
+	moment = require("moment"),
 	logentries = require("node-logentries"),
 	log = logentries.logger({
 		token: process.env.LOGENTRIES_TOKEN
@@ -31,7 +32,7 @@ function removeApartment(id) {
 
 function scrapApartment(apartment, update) {
 	request({
-		url: apartment._id,
+		url: apartment._id + "?siteLocale=en_CA",
 		followRedirect: false
 	}, function(error, response, body) {
 		if (error) {
@@ -53,6 +54,9 @@ function scrapApartment(apartment, update) {
 
 				var roomRegExpResult = /http:\/\/www\.kijiji\.ca\/.+-(\d)-1-2\//.exec(apartment._id);
 				apartment.room = roomRegExpResult ? parseInt(roomRegExpResult[1]) : undefined;
+
+				var date = $("table.ad-attributes tr:first-child td").html();
+				apartment.date = moment(date, "DD-MMM-YY").toDate();
 
 				database.collection("active").update({
 						_id: apartment._id
