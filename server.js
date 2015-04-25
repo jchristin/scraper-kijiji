@@ -45,7 +45,7 @@ function scrapApartment(apartment, update) {
 			if ($("div.expired-ad-container").length > 0 || $("div.message-container").length > 0) {
 				removeApartment(apartment._id);
 			} else {
-				var priceString = $("span[itemprop=price] strong").html().replace(/&#xA0;/g, "");
+				var priceString = $("span[itemprop=price] strong").html().replace(/[\$,]/g, "");
 				apartment.latitude = $("meta[property='og:latitude']").attr("content");
 				apartment.longitude = $("meta[property='og:longitude']").attr("content");
 				apartment.image = $("img[itemprop=image]").attr("src");
