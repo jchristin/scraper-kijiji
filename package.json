@@ -17,7 +17,6 @@
     "cron": "^1.0.5",
     "moment": "^2.10.2",
     "mongodb": "^1.4.19",
-    "node-logentries": "^0.1.4",
     "request": "^2.45.0"
   }
 }

@@ -1,5 +1,5 @@
 {
-  "name": "flat-scraper-kijiji",
+  "name": "fleub-scraper-kijiji",
   "version": "0.1.0",
   "dependencies": {
     "async": {
@@ -174,11 +174,6 @@
           }
         }
       }
-    },
-    "node-logentries": {
-      "version": "0.1.4",
-      "from": "node-logentries@>=0.1.4 <0.2.0",
-      "resolved": "https://registry.npmjs.org/node-logentries/-/node-logentries-0.1.4.tgz"
     },
     "request": {
       "version": "2.47.0",

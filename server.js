@@ -5,18 +5,9 @@ var async = require("async"),
 	request = require("request"),
 	cheerio = require("cheerio"),
 	moment = require("moment"),
-	logentries = require("node-logentries"),
-	log = logentries.logger({
-		token: process.env.LOGENTRIES_TOKEN
-	}),
 	mongoClient = require("mongodb").MongoClient,
 	mongoUrl = "mongodb://flat-scraper-craigslist:" + process.env.MONGODB_PASSWORD + "@linus.mongohq.com:10059/flats",
 	database;
-
-if (process.env.NODE_ENV !== "production") {
-	log.info = console.log;
-	log.err = console.log;
-}
 
 function removeApartment(apartment) {
 	apartment.active = false;
@@ -25,9 +16,9 @@ function removeApartment(apartment) {
 		}, apartment, {},
 		function(err) {
 			if (err) {
-				log.err(err);
+				console.log(err);
 			} else {
-				log.info("Dead apartment: " + apartment._id);
+				console.log("Dead apartment: " + apartment._id);
 			}
 		}
 	);
@@ -39,7 +30,7 @@ function scrapApartment(apartment, update) {
 		followRedirect: false
 	}, function(error, response, body) {
 		if (error) {
-			log.err(error);
+			console.log(error);
 		} else if (response.statusCode == 301) {
 			removeApartment(apartment);
 		} else if (response.statusCode == 200) {
@@ -69,19 +60,19 @@ function scrapApartment(apartment, update) {
 					},
 					function(err) {
 						if (err) {
-							log.err(err);
+							console.log(err);
 						} else {
 							if (update) {
-								log.info("Update apartment: " + apartment._id);
+								console.log("Update apartment: " + apartment._id);
 							} else {
-								log.info("New apartment: " + apartment._id);
+								console.log("New apartment: " + apartment._id);
 							}
 						}
 					});
 			}
 		} else {
-			log.err(apartment._id + ": " + response.statusCode);
-			log.err(body);
+			console.log(apartment._id + ": " + response.statusCode);
+			console.log(body);
 		}
 	});
 }
@@ -89,7 +80,7 @@ function scrapApartment(apartment, update) {
 function checkForNewApartment() {
 	request("http://www.kijiji.ca/b-appartement-condo/ville-de-montreal/c37l1700281?ad=offering", function(error, response, body) {
 		if (error) {
-			log.err(error);
+			console.log(error);
 		} else if (response.statusCode == 200) {
 			var $ = cheerio.load(body);
 
@@ -100,7 +91,7 @@ function checkForNewApartment() {
 					_id: url
 				}, {}, function(err, result) {
 					if (err) {
-						log.err(err);
+						console.log(err);
 					} else {
 						if (!result) {
 							var apartment = {
@@ -114,8 +105,8 @@ function checkForNewApartment() {
 				});
 			});
 		} else {
-			log.err("http://montreal.craigslist.ca/search/apa: " + response.statusCode);
-			log.err(body);
+			console.log("http://montreal.craigslist.ca/search/apa: " + response.statusCode);
+			console.log(body);
 		}
 	});
 }
@@ -128,7 +119,7 @@ function updateLastApartment() {
 		"last": 1
 	}).limit(1).toArray(function(err, docs) {
 		if (err) {
-			log.err(err);
+			console.log(err);
 		} else {
 			var apartment = docs[0];
 			if (apartment) {
@@ -149,7 +140,7 @@ async.series([
 				if (error) {
 					callback(error);
 				} else if (response.statusCode == 200) {
-					log.info("IP: " + body.ip);
+					console.log("IP: " + body.ip);
 					callback();
 				} else {
 					callback(body);
@@ -162,7 +153,7 @@ async.series([
 				if (error) {
 					callback(error);
 				} else {
-					log.info("Kijiji connectivity: " + response.statusCode);
+					console.log("Kijiji connectivity: " + response.statusCode);
 					if (response.statusCode == 200) {
 						callback();
 					} else {
@@ -177,7 +168,7 @@ async.series([
 				if (err) {
 					callback(err);
 				} else {
-					log.info("Connected to the database");
+					console.log("Connected to the database");
 					database = db;
 					callback();
 				}
@@ -190,5 +181,5 @@ async.series([
 		}
 	],
 	function(err) {
-		log.err(err);
+		console.log(err);
 	});
