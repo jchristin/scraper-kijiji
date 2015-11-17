@@ -6,7 +6,6 @@ var async = require("async"),
 	cheerio = require("cheerio"),
 	moment = require("moment"),
 	mongoClient = require("mongodb").MongoClient,
-	mongoUrl = "mongodb://flat-scraper-craigslist:" + process.env.MONGODB_PASSWORD + "@linus.mongohq.com:10059/flats",
 	database;
 
 function removeApartment(apartment) {
@@ -18,7 +17,7 @@ function removeApartment(apartment) {
 			if (err) {
 				console.log(err);
 			} else {
-				console.log("Dead apartment: " + apartment._id);
+				console.log("Dead apartment: " + apartment.url);
 			}
 		}
 	);
@@ -26,7 +25,7 @@ function removeApartment(apartment) {
 
 function scrapApartment(apartment, update) {
 	request({
-		url: apartment._id + "?siteLocale=en_CA",
+		url: apartment.url + "?siteLocale=en_CA",
 		followRedirect: false
 	}, function(error, response, body) {
 		if (error) {
@@ -40,14 +39,16 @@ function scrapApartment(apartment, update) {
 				removeApartment(apartment);
 			} else {
 				var priceString = $("span[itemprop=price] strong").html().replace(/[\$,]/g, "");
-				apartment.latitude = $("meta[property='og:latitude']").attr("content");
-				apartment.longitude = $("meta[property='og:longitude']").attr("content");
+				var latitude = $("meta[property='og:latitude']").attr("content");
+				var longitude = $("meta[property='og:longitude']").attr("content");
+
+				apartment.coord = [parseFloat(longitude), parseFloat(latitude)];
 				apartment.image = $("img[itemprop=image]").attr("src");
 				apartment.price = parseInt(priceString);
 				apartment.last = new Date();
 				apartment.active = true;
 
-				var roomRegExpResult = /http:\/\/www\.kijiji\.ca\/.+-(\d)-1-2\//.exec(apartment._id);
+				var roomRegExpResult = /http:\/\/www\.kijiji\.ca\/.+-(\d)-1-2\//.exec(apartment.url);
 				apartment.room = roomRegExpResult ? parseInt(roomRegExpResult[1]) : undefined;
 
 				var date = $("table.ad-attributes tr:first-child td").html();
@@ -63,15 +64,15 @@ function scrapApartment(apartment, update) {
 							console.log(err);
 						} else {
 							if (update) {
-								console.log("Update apartment: " + apartment._id);
+								console.log("Update apartment: " + apartment.url);
 							} else {
-								console.log("New apartment: " + apartment._id);
+								console.log("New apartment: " + apartment.url);
 							}
 						}
 					});
 			}
 		} else {
-			console.log(apartment._id + ": " + response.statusCode);
+			console.log(apartment.url + ": " + response.statusCode);
 			console.log(body);
 		}
 	});
@@ -88,14 +89,14 @@ function checkForNewApartment() {
 				var url = "http://www.kijiji.ca" + $(element).attr("data-vip-url");
 
 				database.collection("apartments").findOne({
-					_id: url
+					url: url
 				}, {}, function(err, result) {
 					if (err) {
 						console.log(err);
 					} else {
 						if (!result) {
 							var apartment = {
-								_id: url,
+								url: url,
 								source: "kijiji"
 							};
 
@@ -164,7 +165,7 @@ async.series([
 		},
 		// Connect to the database.
 		function(callback) {
-			mongoClient.connect(mongoUrl, function(err, db) {
+			mongoClient.connect(process.env.MONGODB_URL, function(err, db) {
 				if (err) {
 					callback(err);
 				} else {
