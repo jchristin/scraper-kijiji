@@ -106,7 +106,7 @@ function checkForNewApartment() {
 				});
 			});
 		} else {
-			console.log("http://montreal.craigslist.ca/search/apa: " + response.statusCode);
+			console.log(response.statusCode);
 			console.log(body);
 		}
 	});
