@@ -17,6 +17,7 @@
     "cron": "^1.0.9",
     "moment": "^2.10.6",
     "mongodb": "^2.0.48",
-    "request": "^2.65.0"
+    "request": "^2.65.0",
+    "superagent": "^1.7.2"
   }
 }

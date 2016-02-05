@@ -3,24 +3,23 @@
 var async = require("async"),
 	cron = require("cron"),
 	request = require("request"),
+	superagent = require("superagent"),
 	cheerio = require("cheerio"),
 	moment = require("moment"),
 	mongoClient = require("mongodb").MongoClient,
 	database;
 
 function removeApartment(apartment) {
-	apartment.active = false;
-	database.collection("apartments").update({
-			_id: apartment._id
-		}, apartment, {},
-		function(err) {
+	superagent
+		.delete("http://www.fleub.com/api/apart")
+		.send(apartment)
+		.end(function(err) {
 			if (err) {
 				console.log(err);
 			} else {
 				console.log("Dead apartment: " + apartment.url);
 			}
-		}
-	);
+		});
 }
 
 function scrapApartment(apartment, update) {
@@ -45,7 +44,6 @@ function scrapApartment(apartment, update) {
 				apartment.coord = [parseFloat(longitude), parseFloat(latitude)];
 				apartment.image = $("img[itemprop=image]").attr("src");
 				apartment.price = parseInt(priceString);
-				apartment.last = new Date();
 				apartment.active = true;
 
 				var roomRegExpResult = /http:\/\/www\.kijiji\.ca\/.+-(\d)-1-2\//.exec(apartment.url);
@@ -54,12 +52,10 @@ function scrapApartment(apartment, update) {
 				var date = $("table.ad-attributes tr:first-child td").html();
 				apartment.date = moment(date, "DD-MMM-YY").toDate();
 
-				database.collection("apartments").update({
-						_id: apartment._id
-					}, apartment, {
-						upsert: true
-					},
-					function(err) {
+				superagent
+					.post("http://www.fleub.com/api/apart")
+					.send(apartment)
+					.end(function(err) {
 						if (err) {
 							console.log(err);
 						} else {
