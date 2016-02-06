@@ -49,9 +49,6 @@ function scrapApartment(apartment, update) {
 				var roomRegExpResult = /http:\/\/www\.kijiji\.ca\/.+-(\d)-1-2\//.exec(apartment.url);
 				apartment.room = roomRegExpResult ? parseInt(roomRegExpResult[1]) : undefined;
 
-				var date = $("table.ad-attributes tr:first-child td").html();
-				apartment.date = moment(date, "DD-MMM-YY").toDate();
-
 				superagent
 					.post("http://www.fleub.com/api/apart")
 					.send(apartment)
