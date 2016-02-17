@@ -11,7 +11,7 @@ var async = require("async"),
 
 function removeApartment(apartment) {
 	superagent
-		.delete("http://www.fleub.com/api/apart")
+		.delete(process.env.FLEUB_URL + "/api/apart")
 		.send(apartment)
 		.end(function(err) {
 			if (err) {
@@ -50,7 +50,7 @@ function scrapApartment(apartment, update) {
 				apartment.room = roomRegExpResult ? parseInt(roomRegExpResult[1]) : undefined;
 
 				superagent
-					.post("http://www.fleub.com/api/apart")
+					.post(process.env.FLEUB_URL + "/api/apart")
 					.send(apartment)
 					.end(function(err) {
 						if (err) {
