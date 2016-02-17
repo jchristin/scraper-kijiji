@@ -45,6 +45,7 @@ function scrapApartment(apartment, update) {
 				apartment.image = $("img[itemprop=image]").attr("src");
 				apartment.price = parseInt(priceString);
 				apartment.active = true;
+				apartment.description = $("span[itemprop=description]").html();
 
 				var roomRegExpResult = /http:\/\/www\.kijiji\.ca\/.+-(\d)-1-2\//.exec(apartment.url);
 				apartment.room = roomRegExpResult ? parseInt(roomRegExpResult[1]) : undefined;
