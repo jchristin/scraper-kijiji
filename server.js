@@ -41,6 +41,10 @@ function scrapApartment(apartment, update) {
 				var latitude = $("meta[property='og:latitude']").attr("content");
 				var longitude = $("meta[property='og:longitude']").attr("content");
 
+				apartment.images = $("div[id=ImageThumbnails] img").map(function() {
+					return $(this).attr("src").replace("$_14", "$_27");
+				}).get();
+
 				apartment.coord = [parseFloat(longitude), parseFloat(latitude)];
 				apartment.image = $("img[itemprop=image]").attr("src");
 				apartment.price = parseInt(priceString);
