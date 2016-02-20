@@ -5,7 +5,6 @@ var async = require("async"),
 	request = require("request"),
 	superagent = require("superagent"),
 	cheerio = require("cheerio"),
-	moment = require("moment"),
 	mongoClient = require("mongodb").MongoClient,
 	database;
 
@@ -24,55 +23,89 @@ function removeApartment(apartment) {
 
 function scrapApartment(apartment, update) {
 	request({
-		url: apartment.url + "?siteLocale=en_CA",
-		followRedirect: false
+		url: apartment.url + "?siteLocale=en_CA"
 	}, function(error, response, body) {
 		if (error) {
 			console.log(error);
-		} else if (response.statusCode == 301) {
-			removeApartment(apartment);
-		} else if (response.statusCode == 200) {
-			var $ = cheerio.load(body);
+			return;
+		}
 
-			if ($("div.expired-ad-container").length > 0 || $("div.message-container").length > 0) {
-				removeApartment(apartment);
-			} else {
-				var priceString = $("span[itemprop=price] strong").html().replace(/[\$,]/g, "");
-				var latitude = $("meta[property='og:latitude']").attr("content");
-				var longitude = $("meta[property='og:longitude']").attr("content");
-
-				apartment.images = $("div[id=ImageThumbnails] img").map(function() {
-					return $(this).attr("src").replace("$_14", "$_27");
-				}).get();
-
-				apartment.coord = [parseFloat(longitude), parseFloat(latitude)];
-				apartment.image = $("img[itemprop=image]").attr("src");
-				apartment.price = parseInt(priceString);
-				apartment.active = true;
-				apartment.description = $("span[itemprop=description]").html();
-
-				var roomRegExpResult = /http:\/\/www\.kijiji\.ca\/.+-(\d)-1-2\//.exec(apartment.url);
-				apartment.room = roomRegExpResult ? parseInt(roomRegExpResult[1]) : undefined;
-
-				superagent
-					.post(process.env.FLEUB_URL + "/api/apart")
-					.send(apartment)
-					.end(function(err) {
-						if (err) {
-							console.log(err);
-						} else {
-							if (update) {
-								console.log("Update apartment: " + apartment.url);
-							} else {
-								console.log("New apartment: " + apartment.url);
-							}
-						}
-					});
-			}
-		} else {
+		if (response.statusCode != 200) {
 			console.log(apartment.url + ": " + response.statusCode);
 			console.log(body);
 		}
+
+		if(/http:\/\/www\.kijiji\.ca\/b-appartement-condo/.test(response.request.uri.href)) {
+			removeApartment(apartment);
+			return;
+		}
+
+		var $ = cheerio.load(body);
+		if ($("div.expired-ad-container").length > 0 || $("div.message-container").length > 0) {
+			removeApartment(apartment);
+			return;
+		}
+
+		var priceString = $("span[itemprop=price] strong").html().replace(/[\$,]/g, "");
+		var latitude = $("meta[property='og:latitude']").attr("content");
+		var longitude = $("meta[property='og:longitude']").attr("content");
+
+		apartment.images = $("div[id=ImageThumbnails] img").map(function() {
+			return $(this).attr("src").replace("$_14", "$_27");
+		}).get();
+
+		apartment.coord = [parseFloat(longitude), parseFloat(latitude)];
+		apartment.price = parseInt(priceString);
+		apartment.active = true;
+		apartment.description = $("span[itemprop=description]").html();
+
+		var roomRegExpResult = /http:\/\/www\.kijiji\.ca\/v-bachelor-studio/.exec(response.request.uri.href);
+		if(roomRegExpResult !== null) {
+			apartment.bedroom = 0;
+		} else {
+			roomRegExpResult = /http:\/\/www\.kijiji\.ca\/v-(\d)-bedroom/.exec(response.request.uri.href);
+			if(roomRegExpResult !== null) {
+				apartment.bedroom = parseInt(roomRegExpResult[1]);
+			} else {
+				roomRegExpResult = /http:\/\/www\.kijiji\.ca\/.+-(\d)-1-2/.exec(response.request.uri.href);
+				if(roomRegExpResult !== null) {
+					switch(parseInt(roomRegExpResult[1])) {
+						case 1:
+							apartment.bedroom = 0;
+							break;
+						case 2:
+							apartment.bedroom = 1;
+							break;
+						case 3:
+							apartment.bedroom = 1;
+							break;
+						case 4:
+							apartment.bedroom = 2;
+							break;
+						case 5:
+							apartment.bedroom = 3;
+							break;
+						default:
+							apartment.bedroom = 4;
+					}
+				}
+			}
+		}
+
+		superagent
+			.post(process.env.FLEUB_URL + "/api/apart")
+			.send(apartment)
+			.end(function(err) {
+				if (err) {
+					console.log(err);
+				} else {
+					if (update) {
+						console.log("Update apartment: " + apartment.url);
+					} else {
+						console.log("New apartment: " + apartment.url);
+					}
+				}
+			});
 	});
 }
 
