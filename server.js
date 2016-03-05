@@ -35,7 +35,7 @@ function scrapApartment(apartment, update) {
 			console.log(body);
 		}
 
-		if(/http:\/\/www\.kijiji\.ca\/b-appartement-condo/.test(response.request.uri.href)) {
+		if(/http:\/\/www\.kijiji\.ca\/b-/.test(response.request.uri.href)) {
 			removeApartment(apartment);
 			return;
 		}
