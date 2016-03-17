@@ -40,6 +40,11 @@ function scrapApartment(apartment, update) {
 			return;
 		}
 
+		if(response.request.uri.href.indexOf("set-location") > -1) {
+			removeApartment(apartment);
+			return;
+		}
+
 		var $ = cheerio.load(body);
 		if ($("div.expired-ad-container").length > 0 || $("div.message-container").length > 0) {
 			removeApartment(apartment);
