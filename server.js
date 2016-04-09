@@ -102,7 +102,13 @@ function scrapApartment(apartment, update) {
 			.send(apartment)
 			.end(function(err) {
 				if (err) {
-					console.log(err);
+					if(err.status === 400)
+					{
+						console.log("Bad request: " + apartment.url);
+						removeApartment(apartment);
+					} else {
+						console.log(err);
+					}
 				} else {
 					if (update) {
 						console.log("Update apartment: " + apartment.url);
