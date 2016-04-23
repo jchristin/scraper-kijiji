@@ -52,14 +52,13 @@ function scrapApartment(apartment, update) {
 		}
 
 		var priceString = $("span[itemprop=price] strong").html().replace(/[\$,]/g, "");
-		var latitude = $("meta[property='og:latitude']").attr("content");
-		var longitude = $("meta[property='og:longitude']").attr("content");
 
 		apartment.images = $("div[id=ImageThumbnails] img").map(function() {
 			return $(this).attr("src").replace("$_14", "$_27");
 		}).get();
 
-		apartment.coord = [parseFloat(longitude), parseFloat(latitude)];
+	 	apartment.address = $("table.ad-attributes tr").next().next().find("td")["0"].children[0].data;
+
 		apartment.price = parseInt(priceString);
 		apartment.active = true;
 		apartment.description = $("span[itemprop=description]").html();
@@ -127,9 +126,8 @@ function checkForNewApartment() {
 		} else if (response.statusCode == 200) {
 			var $ = cheerio.load(body);
 
-			$("table.regular-ad").each(function(index, element) {
+			$("div[data-vip-url]").each(function(index, element) {
 				var url = "http://www.kijiji.ca" + $(element).attr("data-vip-url");
-
 				database.collection("apartments").findOne({
 					url: url
 				}, {}, function(err, result) {
