@@ -1,6 +1,7 @@
 "use strict";
 
-var async = require("async"),
+var _ = require("lodash"),
+	async = require("async"),
 	cron = require("cron"),
 	request = require("request"),
 	superagent = require("superagent"),
@@ -21,7 +22,63 @@ function removeApartment(apartment) {
 		});
 }
 
+function timestampApartment(apartment) {
+	database.collection("apartments").updateOne({
+		_id: apartment._id
+	}, {
+		$set: {
+			last: apartment.last
+		}
+	}, function(err) {
+		if (err) {
+			console.log(err);
+		}
+	});
+}
+
+// Returns true is they are equal.
+function compareApartment(apartment, newApartment) {
+	if(!_.isEqual(apartment.images, newApartment.images)) {
+		console.log("Images are different");
+		console.log("Old: " + apartment.images);
+		console.log("New: " + newApartment.images);
+		return false;
+	}
+
+	/*if(apartment.address != newApartment.address) {
+		console.log("Address is different");
+		console.log("Old: " + apartment.address);
+		console.log("New: " + newApartment.address);
+		return false;
+	}*/
+
+	if(apartment.price != newApartment.price) {
+		console.log("Price is different");
+		console.log("Old: " + apartment.price);
+		console.log("New: " + newApartment.price);
+		return false;
+	}
+
+	if(apartment.description != newApartment.description) {
+		console.log("Description is different");
+		console.log("Old: " + apartment.description);
+		console.log("New: " + newApartment.description);
+		return false;
+	}
+
+	if(apartment.bedroom != newApartment.bedroom) {
+		console.log("Bedroom is different");
+		console.log("Old: " + apartment.bedroom);
+		console.log("New: " + newApartment.bedroom);
+		return false;
+	}
+
+	return true;
+}
+
 function scrapApartment(apartment, update) {
+	console.log("Scrap: " + apartment.url);
+
 	request({
 		url: apartment.url + "?siteLocale=en_CA"
 	}, function(error, response, body) {
@@ -51,50 +108,61 @@ function scrapApartment(apartment, update) {
 			return;
 		}
 
-		var priceString = $("span[itemprop=price] strong").html().replace(/[\$,]/g, "");
+		var newApartment = {};
 
-		apartment.images = $("div[id=ImageThumbnails] img").map(function() {
+		newApartment.images = $("div[id=ImageThumbnails] img").map(function() {
 			return $(this).attr("src").replace("$_14", "$_27");
 		}).get();
 
-	 	apartment.address = $("table.ad-attributes tr").next().next().find("td")["0"].children[0].data;
+	 	newApartment.address = $("table.ad-attributes tr").next().next().find("td")["0"].children[0].data;
 
-		apartment.price = parseInt(priceString);
-		apartment.active = true;
-		apartment.description = $("span[itemprop=description]").html();
+		var priceString = $("span[itemprop=price] strong").html().replace(/[\$,]/g, "");
+		newApartment.price = parseInt(priceString) || null;
+		newApartment.active = true;
+		newApartment.description = $("span[itemprop=description]").html();
 
 		var roomRegExpResult = /http:\/\/www\.kijiji\.ca\/v-bachelor-studio/.exec(response.request.uri.href);
 		if(roomRegExpResult !== null) {
-			apartment.bedroom = 0;
+			newApartment.bedroom = 0;
 		} else {
 			roomRegExpResult = /http:\/\/www\.kijiji\.ca\/v-(\d)-bedroom/.exec(response.request.uri.href);
 			if(roomRegExpResult !== null) {
-				apartment.bedroom = parseInt(roomRegExpResult[1]);
+				newApartment.bedroom = parseInt(roomRegExpResult[1]);
 			} else {
 				roomRegExpResult = /http:\/\/www\.kijiji\.ca\/.+-(\d)-1-2/.exec(response.request.uri.href);
 				if(roomRegExpResult !== null) {
 					switch(parseInt(roomRegExpResult[1])) {
 						case 1:
-							apartment.bedroom = 0;
+							newApartment.bedroom = 0;
 							break;
 						case 2:
-							apartment.bedroom = 1;
+							newApartment.bedroom = 1;
 							break;
 						case 3:
-							apartment.bedroom = 1;
+							newApartment.bedroom = 1;
 							break;
 						case 4:
-							apartment.bedroom = 2;
+							newApartment.bedroom = 2;
 							break;
 						case 5:
-							apartment.bedroom = 3;
+							newApartment.bedroom = 3;
 							break;
 						default:
-							apartment.bedroom = 4;
+							newApartment.bedroom = 4;
 					}
 				}
 			}
 		}
+
+		apartment.last = new Date();
+
+		if(update && compareApartment(apartment, newApartment)) {
+			console.log("No change: " + apartment.url);
+			timestampApartment(apartment);
+			return;
+		}
+
+		Object.assign(apartment, newApartment);
 
 		superagent
 			.post(process.env.FLEUB_URL + "/api/apart")
