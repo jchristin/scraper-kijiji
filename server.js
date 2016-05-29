@@ -45,12 +45,12 @@ function compareApartment(apartment, newApartment) {
 		return false;
 	}
 
-	/*if(apartment.address != newApartment.address) {
+	if(apartment.address != newApartment.address) {
 		console.log("Address is different");
 		console.log("Old: " + apartment.address);
 		console.log("New: " + newApartment.address);
 		return false;
-	}*/
+	}
 
 	if(apartment.price != newApartment.price) {
 		console.log("Price is different");
