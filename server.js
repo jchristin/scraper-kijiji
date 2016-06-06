@@ -125,7 +125,7 @@ function scrapApartment(apartment, update) {
 		if(roomRegExpResult !== null) {
 			newApartment.bedroom = 0;
 		} else {
-			roomRegExpResult = /http:\/\/www\.kijiji\.ca\/v-(\d)-bedroom/.exec(response.request.uri.href);
+			roomRegExpResult = /http:\/\/www\.kijiji\.ca\/v-(\d)-/.exec(response.request.uri.href);
 			if(roomRegExpResult !== null) {
 				newApartment.bedroom = parseInt(roomRegExpResult[1]);
 			} else {
