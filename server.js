@@ -108,6 +108,12 @@ function scrapApartment(apartment, update) {
 			return;
 		}
 
+		var houseRental = /http:\/\/www\.kijiji\.ca\/v-house-rental/.exec(response.request.uri.href);
+		if(houseRental !== null) {
+			removeApartment(apartment);
+			return;
+		}
+
 		var newApartment = {};
 
 		newApartment.images = $("div[id=ImageThumbnails] img").map(function() {
