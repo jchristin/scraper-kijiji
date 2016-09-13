@@ -114,6 +114,12 @@ function scrapApartment(apartment, update) {
 			return;
 		}
 
+		var roomRental = /http:\/\/www\.kijiji\.ca\/v-room-rental-roommate/.exec(response.request.uri.href);
+		if(roomRental !== null) {
+			removeApartment(apartment);
+			return;
+		}
+
 		var newApartment = {};
 
 		newApartment.images = $("div[id=ImageThumbnails] img").map(function() {
